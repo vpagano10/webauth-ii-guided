@@ -11,10 +11,12 @@ router.post('/register', (req, res) => {
 
   Users.add(user)
     .then(saved => {
-      res.status(201).json(saved);
+      res.status(201)
+        .json(saved);
     })
     .catch(error => {
-      res.status(500).json(error);
+      res.status(500)
+        .json(error);
     });
 });
 
@@ -25,16 +27,37 @@ router.post('/login', (req, res) => {
     .first()
     .then(user => {
       if (user && bcrypt.compareSync(password, user.password)) {
-        res.status(200).json({
-          message: `Welcome ${user.username}!`,
-        });
+        // save a session for the client and send back a cookie
+        req.session.user = user;
+
+        res.status(200)
+          .json({ message: `Welcome ${user.username}!` });
       } else {
-        res.status(401).json({ message: 'Invalid Credentials' });
+        res.status(401)
+          .json({ message: 'Invalid Credentials' });
       }
     })
     .catch(error => {
-      res.status(500).json(error);
+      res.status(500)
+        .json(error);
     });
+});
+
+router.get('/logout', (req, res) => {
+  if (req.session) {
+    req.session.destroy(err => {
+      if (err) {
+        res.status(500)
+          .json({ message: 'could not logout' })
+      } else {
+        res.status(200)
+          .json({ message: 'Successfully logged out' })
+      }
+    });
+  } else {
+    res.status(200)
+      .end();
+  }
 });
 
 module.exports = router;
